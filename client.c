@@ -29,9 +29,19 @@ int main(int agrc, char *argv[]) { //0 - resource // 1 - server
 	semop(semid_resource, &sops, 1);
 
 	if (fork() == 0) {
-		execvp("ls", argv);
+		int fd[2];
+		pipe(fd);
+		if (fork() == 0) {
+			dup2(fd[1], 1);
+			execvp("ls", argv);
+			return 0;
+		}
+		dup2(fd[0], 0);
+		while (read(fd[0], shmaddr, sizeof(char)));
+		wait(NULL);
 	}
 	wait(NULL);
+
 	sops.sem_op = 1;
 	semop(semid_resource, &sops, 1);
 	sops.sem_num = 1;
