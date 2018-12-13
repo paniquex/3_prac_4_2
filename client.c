@@ -11,29 +11,23 @@ const int SHARED_MEMORY_SIZE = 500;
 
 int main(int agrc, char *argv[]) { //0 - resource // 1 - server
 	key_t key = ftok("resource", 'r');
-	int semid_resource = semget(key, 3, 0);
+	int semid_resource = semget(key, 4, 0);
 	if (semid_resource == -1) {
 		printf("error\n");
 		return 1;
 	}
-//	semctl(semid_resource, 0, SETVAL, (int) 1);
-//	semctl(semid_resource, 1, SETVAL, (int) 0);
-
 	int shmid = shmget(key , SHARED_MEMORY_SIZE, 0);
 	char *shmaddr = shmat(shmid, NULL, 0);
 
-
 	struct sembuf sops;
 	sops.sem_op = -1;
-	sops.sem_num = 2;
-	printf("User waiting for server\n");
+	sops.sem_num = 3;
+	printf("-----User waiting for end of another CLIENT work-----\n");
 	semop(semid_resource, &sops, 1);
-	printf("User waiting for resources\n");
-
-	sops.sem_op = -1;
+	printf("-----User waiting for resources-----\n");
 	sops.sem_num = 0;
 	semop(semid_resource, &sops, 1);
-	printf("User working with resources\n");
+	printf("-----User working with resources-----\n");
 	if (fork() == 0) {
 		int fd[2];
 		pipe(fd);
@@ -63,10 +57,14 @@ int main(int agrc, char *argv[]) { //0 - resource // 1 - server
 	wait(NULL);
 
 	sops.sem_op = 1;
+	sops.sem_num = 0;
 	semop(semid_resource, &sops, 1);
-	printf("User has ended work with resources\n");
+	printf("-----User has ended work with resources\n-----");
 	sops.sem_num = 1;
 	semop(semid_resource, &sops, 1);
-	printf("User is off\n");
+	printf("-----Server can wake up-----\n");
+	sops.sem_num = 3;
+	semop(semid_resource, &sops, 1);
+	printf("-----User has ended full work-----\n\n");
 	return 0;
 }
