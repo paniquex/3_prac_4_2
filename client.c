@@ -52,6 +52,7 @@ int main(int agrc, char *argv[]) { //0 - resource // 1 - server
 		close(fd[1]);
 		int i = 0;
 		int read_error;
+		sleep(4); // debug
 		while ((read_error = read(fd[0], shmaddr_ls_output + i, sizeof(char))) != 0) {
 			if (read_error != -1) {
 				i++;
