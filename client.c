@@ -47,6 +47,8 @@ int main(int agrc, char *argv[]) { //0 - resource // 1 - server
 			close(fd[1]);
 			close(fd[0]);
 			execvp("ls", argv);
+			semctl(semid_resource, 3, SETVAL, (int) 1);
+			semctl(semid_resource, 0, SETVAL, (int) 1);
 			return 0;
 		}
 		close(fd[1]);
